@@ -9,12 +9,14 @@ class Product extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'categories',
+        'category_id',
         'brand_id',
         'name',
+        'slug',
+        'images',
         'description',
         'price',
-        'iss_active',
+        'is_active',
         'is_featured',
         'in_stock',
         'on_sale'
@@ -23,12 +25,12 @@ class Product extends Model
         'images'=>'array',
     ];
     public function category(){
-        return $this->belongsToMany(Category::class);
+        return $this->belongsTo(Category::class);
     }
     public function brand(){
         return $this->belongsTo(Brand::class);
     }
     public function orderItems(){
-        return $this->belongsToMany(OrderItem::class);
+        return $this->hasMany(OrderItem::class);
     }
 }
