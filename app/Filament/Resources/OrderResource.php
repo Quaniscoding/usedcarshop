@@ -28,6 +28,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Number;
 
 class OrderResource extends Resource
@@ -49,6 +50,12 @@ class OrderResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required(),
+                        Select::make('staff_id')
+                            ->label('Staff')
+                            ->required()
+                            ->searchable()
+                            ->preload()
+                            ->relationship('staff', 'name'),
                         Select::make('payment_method')
                             ->options([
                                 'stripe' => 'Stripe',
@@ -121,26 +128,18 @@ class OrderResource extends Resource
                                     ->reactive()
                                     ->afterStateUpdated(fn($state, Set $set) => $set('unit_amount', Product::find($state)?->price ?? 0))
                                     ->afterStateUpdated(fn($state, Set $set) => $set('total_amount', Product::find($state)?->price ?? 0)),
-                                TextInput::make('quantity')
-                                    ->numeric()
-                                    ->required()
-                                    ->default(1)
-                                    ->minValue(1)
-                                    ->columnSpan(2)
-                                    ->reactive()
-                                    ->afterStateUpdated(fn($state, Set $set, Get $get)
-                                        => $set('total_amount', $state * $get('unit_amount'))),
                                 TextInput::make('unit_amount')
                                     ->numeric()
                                     ->required()
                                     ->disabled()
                                     ->dehydrated()
-                                    ->columnSpan(3),
+                                    ->columnSpan(4),
                                 TextInput::make('total_amount')
                                     ->numeric()
+                                    ->disabled()
                                     ->required()
                                     ->dehydrated()
-                                    ->columnSpan(3)
+                                    ->columnSpan(4)
                             ])->columns(12),
                         Placeholder::make('grand_total_placeholder')
                             ->label('Grand total')
@@ -214,6 +213,12 @@ class OrderResource extends Resource
                     Tables\Actions\EditAction::make(),
                     Tables\Actions\ViewAction::make(),
                     Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\Action::make('export')
+                        ->label('Export to Excel')
+                        ->icon('heroicon-o-arrow-down-on-square-stack')
+                        ->action(function () {
+                            return (new \App\Exports\OrdersExport)->download('orders.xlsx');
+                        })
                 ])
             ])
             ->bulkActions([
@@ -222,7 +227,6 @@ class OrderResource extends Resource
                 ]),
             ]);
     }
-
     public static function getRelations(): array
     {
         return [

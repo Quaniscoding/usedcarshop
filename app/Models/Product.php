@@ -16,21 +16,44 @@ class Product extends Model
         'images',
         'description',
         'price',
+        'color',
+        'year',
+        'origin_id',
+        'location_id',
+        'number_km',
+        'design_id',
+        'fuel',
+        'gearbox',
+        'number_seats',
         'is_active',
         'is_featured',
+        'is_sold',
+        'quantity',
         'in_stock',
-        'on_sale'
+        'on_sale',
+        'quantity'
     ];
     protected $casts = [
-        'images'=>'array',
+        'images' => 'array',
     ];
-    public function category(){
-        return $this->belongsTo(Category::class);
+    public function origin()
+    {
+        return $this->belongsTo(Origin::class);
     }
-    public function brand(){
+    public function design()
+    {
+        return $this->belongsTo(Design::class);
+    }
+    public function location()
+    {
+        return $this->belongsTo(Location::class);
+    }
+    public function brand()
+    {
         return $this->belongsTo(Brand::class);
     }
-    public function orderItems(){
+    public function orderItems()
+    {
         return $this->hasMany(OrderItem::class);
     }
 }

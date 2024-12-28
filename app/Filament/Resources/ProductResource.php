@@ -6,6 +6,7 @@ use App\Filament\Resources\ProductResource\Pages;
 use App\Filament\Resources\ProductResource\RelationManagers;
 use App\Models\Product;
 use Filament\Forms;
+use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Group;
 use Filament\Forms\Components\MarkdownEditor;
@@ -51,7 +52,61 @@ class ProductResource extends Resource
                                 ->disabled()
                                 ->dehydrated()
                                 ->unique(Product::class, 'slug', ignoreRecord: true),
+                            ColorPicker::make('color')
+                                ->required()
+                                ->label('Car Colors')
+                                ->placeholder('#FFFFFF'),
+                            TextInput::make('year')
+                                ->numeric()
+                                ->minValue(2000)
+                                ->maxValue(2024)
+                                ->required()
+                                ->label('Manufactured year'),
+                            Select::make('origin_id')
+                                ->required()
+                                ->label('Made in')
+                                ->searchable()
+                                ->preload()
+                                ->relationship('origin', 'name'),
+                            Select::make('location_id')
+                                ->required()
+                                ->label('Selling location')
+                                ->searchable()
+                                ->preload()
+                                ->relationship('location', 'name'),
+                            TextInput::make('number_km')
+                                ->numeric()
+                                ->required()
+                                ->label('Number of kilometers traveled'),
+                            Select::make('fuel')
+                                ->required()
+                                ->options([
+                                    'gasoline' => 'Gasoline',
+                                    'oil' => 'Oil',
+                                    'electricity' => 'Electricity',
+                                    'hybrid' => 'Hybrid',
+                                    'hybrid plug-in' => 'Hybrid plug-in',
+                                    'other' => 'Other'
+                                ]),
+                            Select::make('gearbox')
+                                ->required()
+                                ->options([
+                                    'number of floors' => 'Number of floors',
+                                    'automatic number' => 'Automatic number',
+                                    'other' => 'Other'
+                                ]),
+                            Select::make('number_seats')
+                                ->required()
+                                ->options([
+                                    4 => 4,
+                                    5 => 5,
+                                    6 => 6,
+                                    7 => 7,
+                                    8 => 8,
+                                    9 => 9,
+                                ]),
                             MarkdownEditor::make('description')
+                                ->required()
                                 ->columnSpanFull()
                                 ->fileAttachmentsDirectory('products')
                         ]
@@ -73,28 +128,31 @@ class ProductResource extends Resource
                             ->prefix('USD'),
                     ]),
                     Section::make('Associations')->schema([
-                        Select::make('category_id')
-                            ->required()
-                            ->searchable()
-                            ->preload()
-                            ->relationship('category', 'name'),
                         Select::make('brand_id')
                             ->required()
                             ->searchable()
                             ->preload()
                             ->relationship('brand', 'name'),
+                        Select::make('design_id')
+                            ->required()
+                            ->searchable()
+                            ->preload()
+                            ->relationship('design', 'name'),
                     ]),
                     Section::make('Status')->schema([
                         Toggle::make('in_stock')
                             ->required()
                             ->default(true),
+                        Toggle::make('is_sold')
+                            ->required(),
                         Toggle::make('is_active')
                             ->required()
                             ->default(true),
                         Toggle::make('is_featured')
                             ->required(),
                         Toggle::make('on_sale')
-                            ->required()
+                            ->required(),
+
                     ])
                 ])->columnSpan(1),
             ])->columns(3);
@@ -104,8 +162,8 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('category.name')
-                    ->sortable(),
+                // Tables\Columns\TextColumn::make('category.name')
+                //     ->sortable(),
                 Tables\Columns\TextColumn::make('brand.name')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('name')
@@ -121,6 +179,8 @@ class ProductResource extends Resource
                     ->boolean(),
                 Tables\Columns\IconColumn::make('in_stock')
                     ->boolean(),
+                Tables\Columns\IconColumn::make('is_sold')
+                    ->boolean(),
                 Tables\Columns\IconColumn::make('on_sale')
                     ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
@@ -133,10 +193,14 @@ class ProductResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('category')
-                    ->relationship('category','name'),
-                    SelectFilter::make('brand')
-                    ->relationship('brand','name')
+                SelectFilter::make('brand')
+                    ->relationship('brand', 'name'),
+                SelectFilter::make('origin')
+                    ->relationship('origin', 'name'),
+                SelectFilter::make('design')
+                    ->relationship('design', 'name'),
+                SelectFilter::make('location')
+                    ->relationship('location', 'name'),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
